@@ -1,11 +1,15 @@
 from aiogram.utils import executor
 
-from app.handlers import client, admin
+from app.handlers import client
+from app.handlers.admin import cancel, create, update, delete
 from create_bot import dp
 from create_logger import logger
 
-admin.register_handlers(dp)
-client.register_handlers(dp)
+cancel.register_handlers()
+create.register_handlers()
+update.register_handlers()
+delete.register_handlers()
+client.register_handlers()
 
 
 async def on_startup(_):
