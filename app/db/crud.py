@@ -1,7 +1,10 @@
 import sqlite3 as sq
 from typing import NamedTuple
 
+from app.create_logger import logger
+
 tablename = 'recipes'
+
 base = sq.connect('recipes_book.db')
 base.execute(f"CREATE TABLE IF NOT EXISTS {tablename}("
              "name PRIMARY KEY, "
@@ -10,7 +13,7 @@ base.execute(f"CREATE TABLE IF NOT EXISTS {tablename}("
              "description, "
              "photo_id)")
 base.commit()
-print("Connected to db")
+logger.info("Connected to db")
 cursor = base.cursor()
 
 
@@ -27,27 +30,40 @@ async def add_to_db(data: dict) -> str:
         cursor.execute(
             f"INSERT INTO {tablename} VALUES(?,?,?,?,?)", tuple(data.values()))
         base.commit()
-        return 'Рецепт успешно добавлен'
+        result_msg = 'Рецепт успешно добавлен'
+        logger.info(f'{result_msg}: {Recipe(*data.values())}')
+        return result_msg
     except Exception as e:
-        return f'Произошла ошибка {e} при добавлении рецепта'
+        result_msg = f'При добавлении рецепта произошла ошибка: {e}'
+        logger.error(result_msg)
+        return result_msg
 
 
 async def get_all() -> list:
     db_result = cursor.execute(f"SELECT * FROM {tablename}").fetchall()
-    return [Recipe(*x) for x in db_result]
+    result = [Recipe(*x) for x in db_result]
+    logger.info(f'Получены все рецепты: {result}')
+    return result
 
 
 async def get_one_recipe(name: str) -> Recipe | None:
     name = name.capitalize()
     if db_result := cursor.execute(
             f"SELECT * from {tablename} WHERE name == ?", (name,)).fetchone():
-        return Recipe(*db_result)
+        result = Recipe(*db_result)
+        logger.info(f"Рецепт {result} найден в БД")
+        return result
+    else:
+        logger.info(f"Рецепт '{name}' не найден в БД")
+        return
 
 
 async def get_all_in_category(category: str) -> list[Recipe]:
     db_result = cursor.execute(
         f"SELECT * FROM {tablename} WHERE category == ?", (category,))
-    return [Recipe(*x) for x in db_result]
+    result = [Recipe(*x) for x in db_result]
+    logger.info(f"Рецепты в категории '{category}': {result}")
+    return result
 
 
 async def delete_recipe(name: str) -> bool | None:
@@ -55,14 +71,22 @@ async def delete_recipe(name: str) -> bool | None:
         cursor.execute(
             "DELETE FROM recipes WHERE name == ?", (recipe.name,)).fetchone()
         base.commit()
+
+        logger.info(f'Рецепт удалён успешно: {Recipe(*recipe)}')
         return True
 
 
 async def update(name: str, key: str, value: str):
     try:
         cursor.execute(
-            f"UPDATE {tablename} SET {key} == ? WHERE name == ?", (value, name))
+            f"UPDATE {tablename} SET {key} == ? WHERE name == ?",
+            (value, name))
         base.commit()
-        return "Рецепт успешно обновлён"
+        result_msg = "Рецепт успешно обновлён"
+        logger.info(f'{result_msg}: у рeцепта "{name}" изменено поле "{key}".'
+                    f' Новое значение: {value}')
+        return result_msg
     except Exception as e:
-        return f"Рецепт не обновлён\n Ошибка: {e}"
+        result_msg = f"Рецепт не обновлён\n Ошибка: {e}"
+        logger.error(result_msg)
+        return result_msg
