@@ -1,20 +1,15 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher.storage import FSMContextProxy
+from aiogram.types import Message, CallbackQuery
+
 from app.config import ADMINS_ID
 from app.create_bot import bot
 from app.create_logger import logger
 from app.db import crud
 from app.keyboards.inline_keyboard import inline_kb_category, inline_kb_update
 from app.keyboards.keyboard import cancel_keyboard, admin_keyboard
-
-
-class Update(StatesGroup):
-    name = State()
-    what_to_change = State()
-    new_value = State()
+from ..states_groups import Update
 
 
 async def update_start(message: Message):
@@ -58,13 +53,16 @@ async def choose(callback: CallbackQuery, state: FSMContext):
     if 'category' in callback.data:
         await callback.message.answer("На какую категорию заменить?",
                                       reply_markup=inline_kb_category)
+        await Update.change_text.set()
     elif 'photo' in callback.data:
         await callback.message.answer(f"Загрузите новое фото",
                                       reply_markup=cancel_keyboard)
+        await Update.change_photo.set()
     else:
         await callback.message.answer(f"Введите новое значение",
                                       reply_markup=cancel_keyboard)
-    await Update.next()
+        await Update.change_text.set()
+    # await Update.next()
     await callback.answer()
 
 
@@ -98,12 +96,12 @@ async def up_category(callback: CallbackQuery, state: FSMContext):
 
 
 def register_handlers(dp: Dispatcher):
-    dp.register_message_handler(update_start, text=['Обновить рецепт'],
+    dp.register_message_handler(update_start, text='Обновить рецепт',
                                 state=None)
     dp.register_message_handler(update, state=Update.name)
     dp.register_callback_query_handler(choose, state=Update.what_to_change)
-    dp.register_message_handler(up, content_types=["text"],
-                                state=Update.new_value)
-    dp.register_message_handler(up_photo, content_types=["photo"],
-                                state=Update.new_value)
-    dp.register_callback_query_handler(up_category, state=Update.new_value)
+    dp.register_message_handler(up, content_types="text",
+                                state=Update.change_text)
+    dp.register_message_handler(up_photo, content_types="photo",
+                                state=Update.change_photo)
+    dp.register_callback_query_handler(up_category, state=Update.change_text)

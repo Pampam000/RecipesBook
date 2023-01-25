@@ -1,6 +1,5 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 
 from app.config import ADMINS_ID
@@ -8,14 +7,7 @@ from app.create_logger import logger
 from app.db import crud
 from app.keyboards.inline_keyboard import inline_kb_category
 from app.keyboards.keyboard import cancel_keyboard, admin_keyboard
-
-
-class Load(StatesGroup):
-    name = State()
-    category = State()
-    ingridients = State()
-    description = State()
-    photo = State()
+from ..states_groups import Load
 
 
 async def load_start(message: Message):
@@ -23,6 +15,7 @@ async def load_start(message: Message):
     if str(user_id) in ADMINS_ID:
 
         await Load.name.set()
+
         await message.answer("Введите название", reply_markup=cancel_keyboard)
         logger.info(f'Пользователь с id {user_id} является админом и начал '
                     'загрузку рецепта')
@@ -42,11 +35,11 @@ async def set_name(message: Message, state: FSMContext):
     else:
         async with state.proxy() as data:
             data['name'] = message.text.capitalize()
-            await Load.next()
-            await message.answer("Укажите категорию",
-                                 reply_markup=inline_kb_category)
-            logger.info(f'Пользователь успешно указал название рецепта: '
-                        f'{message.text}')
+        await Load.next()
+        await message.answer("Укажите категорию",
+                             reply_markup=inline_kb_category)
+        logger.info(f'Пользователь успешно указал название рецепта: '
+                    f'{message.text}')
 
 
 async def choose_category(callback: CallbackQuery, state: FSMContext):
@@ -95,12 +88,12 @@ async def set_photo(message: Message, state: FSMContext):
 
 
 def register_handlers(dp: Dispatcher):
-    dp.register_message_handler(load_start, text=['Загрузить'], state=None)
-
-    dp.register_message_handler(set_name, state=Load.name)
+    dp.register_message_handler(load_start, text='Загрузить', state=None)
+    dp.register_message_handler(set_name, content_types='text',
+                                state=Load.name)
     dp.register_callback_query_handler(choose_category,
                                        state=Load.category)
     dp.register_message_handler(set_ingridients, state=Load.ingridients)
     dp.register_message_handler(set_description, state=Load.description)
-    dp.register_message_handler(set_photo, content_types=['photo'],
+    dp.register_message_handler(set_photo, content_types='photo',
                                 state=Load.photo)

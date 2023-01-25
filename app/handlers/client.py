@@ -52,7 +52,6 @@ async def choose_category(callback: CallbackQuery):
 async def get_one_recipe(message: Message):
     logger.info(f"Пользователь написал боту '{message.text}'")
     if recipe := await crud.get_one_recipe(message.text.capitalize()):
-
         await bot.send_photo(message.from_user.id, recipe.photo_id,
                              f'{recipe.name.capitalize()} '
                              f'({recipe.category})\n\n '
@@ -61,19 +60,12 @@ async def get_one_recipe(message: Message):
         await message.answer('Нет рецепта с таким названием')
 
 
-async def other(message: Message):
-    logger.info("Пользователь ввёл НЕ текстовое сообщение для поиска "
-                f"рецепта: {message.values}")
-    await message.answer("Для корректной работы, пожалуйста, введите текст")
-
-
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(start, commands=['start'])
     dp.register_message_handler(get_all_names, content_types="text",
-                                text=['Список рецептов'])
+                                text='Список рецептов')
     dp.register_message_handler(get_recipes_by_category, content_types="text",
-                                text=['Рецепты по категориям'])
+                                text='Рецепты по категориям')
     dp.register_callback_query_handler(
         choose_category)
     dp.register_message_handler(get_one_recipe, content_types="text")
-    dp.register_message_handler(other, content_types='any')
