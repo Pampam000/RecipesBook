@@ -1,7 +1,7 @@
+from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from app.create_bot import dp
 from app.create_logger import logger
 from app.keyboards.keyboard import admin_keyboard
 
@@ -22,5 +22,5 @@ async def cancel(message: Message, state: FSMContext):
     logger.info(msg)
 
 
-def register_handlers():
+def register_handlers(dp: Dispatcher):
     dp.register_message_handler(cancel, text=['Отмена'], state="*")

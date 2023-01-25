@@ -1,2 +1,4 @@
 .idea
 .env
+create_db.sql
+recipes_book.db

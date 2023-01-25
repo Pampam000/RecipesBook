@@ -17,15 +17,17 @@ async def start(message: Message):
     await message.answer('Привет!', reply_markup=user_keyboard)
 
 
+async def create_message_with_recipes_list(message: Message, recipes: list):
+    result = ''
+    for n, i in enumerate(recipes):
+        result += f"{n + 1}. {i.name}\n"
+    await message.answer(result)
+
+
 async def get_all_names(message: Message):
     logger.info("Пользователь нажал кнопку 'Список рецептов'")
     if all_recipes := await crud.get_all():
-        result = ''
-
-        for n, i in enumerate(all_recipes):
-            result += f"{n + 1}. {i.name}\n"
-
-        await message.answer(result)
+        await create_message_with_recipes_list(message, all_recipes)
     else:
         await message.answer("Список рецептов пуст :(")
 
@@ -38,13 +40,7 @@ async def get_recipes_by_category(message: Message):
 async def choose_category(callback: CallbackQuery):
     logger.info(f"Пользователь выбрал категорию '{callback.data}'")
     if recipes := await crud.get_all_in_category(callback.data):
-        result = ''
-
-        for n, i in enumerate(recipes):
-            result += f"{n + 1}. {i.name}\n"
-
-        await callback.message.answer(result)
-
+        await create_message_with_recipes_list(callback.message, recipes)
     else:
         msg = f"Список рецептов в категории '{callback.data}' пуст :("
         await callback.message.answer(msg)

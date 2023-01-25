@@ -5,11 +5,11 @@ from app.handlers.admin import cancel, create, update, delete
 from create_bot import dp
 from create_logger import logger
 
-cancel.register_handlers()
-create.register_handlers()
-update.register_handlers()
-delete.register_handlers()
-client.register_handlers()
+cancel.register_handlers(dp)
+create.register_handlers(dp)
+update.register_handlers(dp)
+delete.register_handlers(dp)
+client.register_handlers(dp)
 
 
 async def on_startup(_):

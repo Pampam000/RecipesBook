@@ -1,9 +1,10 @@
+from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
-
+from aiogram.dispatcher.storage import FSMContextProxy
 from app.config import ADMINS_ID
-from app.create_bot import bot, dp
+from app.create_bot import bot
 from app.create_logger import logger
 from app.db import crud
 from app.keyboards.inline_keyboard import inline_kb_category, inline_kb_update
@@ -67,40 +68,36 @@ async def choose(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+async def set_new_value(message: Message, state: FSMContext,
+                        data: FSMContextProxy):
+    logger.info(f'Новое значение: {data["value"]}')
+    msg = await crud.update(name=data['name'], key=data['what_to_change'],
+                            value=data['value'])
+    await message.answer(msg, reply_markup=admin_keyboard)
+    logger.info(f"Конечный автомат {await state.get_state()} закончен")
+    await state.finish()
+
+
 async def up(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['value'] = message.text.capitalize()
-        logger.info(f'Новое значение: {data["value"]}')
-        msg = await crud.update(name=data['name'], key=data['what_to_change'],
-                                value=data['value'])
-        await message.answer(msg, reply_markup=admin_keyboard)
-    logger.info(f"Конечный автомат {await state.get_state()} закончен")
-    await state.finish()
+        await set_new_value(message, state, data)
 
 
 async def up_photo(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['value'] = message.photo[-1].file_id
-
-        msg = await crud.update(name=data['name'], key=data['what_to_change'],
-                                value=data['value'])
-        await message.answer(msg, reply_markup=admin_keyboard)
-        logger.info(f"Конечный автомат {await state.get_state()} закончен")
-        await state.finish()
+        await set_new_value(message, state, data)
 
 
 async def up_category(callback: CallbackQuery, state: FSMContext):
     async with state.proxy() as data:
         data['value'] = callback.data.capitalize()
-        msg = await crud.update(name=data['name'], key=data['what_to_change'],
-                                value=data['value'])
-        await callback.message.answer(msg, reply_markup=admin_keyboard)
-        logger.info(f"Конечный автомат {await state.get_state()} закончен")
-        await state.finish()
+        await set_new_value(callback.message, state, data)
         await callback.answer()
 
 
-def register_handlers():
+def register_handlers(dp: Dispatcher):
     dp.register_message_handler(update_start, text=['Обновить рецепт'],
                                 state=None)
     dp.register_message_handler(update, state=Update.name)

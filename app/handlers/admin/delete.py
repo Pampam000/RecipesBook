@@ -1,9 +1,9 @@
+from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message
 
 from app.config import ADMINS_ID
-from app.create_bot import dp
 from app.create_logger import logger
 from app.db import crud
 from app.keyboards.keyboard import cancel_keyboard, admin_keyboard
@@ -42,7 +42,7 @@ async def delete(message: Message, state: FSMContext):
         logger.info(msg)
 
 
-def register_handlers():
+def register_handlers(dp: Dispatcher):
     dp.register_message_handler(delete_start, text=['Удалить рецепт'],
                                 state=None)
     dp.register_message_handler(delete, state=Delete.name)

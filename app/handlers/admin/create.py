@@ -1,9 +1,9 @@
+from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 
 from app.config import ADMINS_ID
-from app.create_bot import dp
 from app.create_logger import logger
 from app.db import crud
 from app.keyboards.inline_keyboard import inline_kb_category
@@ -94,7 +94,7 @@ async def set_photo(message: Message, state: FSMContext):
     await state.finish()
 
 
-def register_handlers():
+def register_handlers(dp: Dispatcher):
     dp.register_message_handler(load_start, text=['Загрузить'], state=None)
 
     dp.register_message_handler(set_name, state=Load.name)
