@@ -1,24 +1,31 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-
-hot_dish = InlineKeyboardButton(text='Горячее', callback_data='Горячее')
-backery = InlineKeyboardButton(text='Выпечка', callback_data='Выпечка')
-sauce = InlineKeyboardButton(text='Соусы', callback_data='Соусы')
-salad = InlineKeyboardButton(text='Салаты', callback_data='Салаты')
-sol = InlineKeyboardButton(text='Соленья', callback_data='Соленья')
-var = InlineKeyboardButton(text='Варенья', callback_data='Варенья')
+categories = ('Горячее', 'Выпечка', 'Соусы', 'Салаты', 'Соленья', 'Варенья')
+what_to_change = ('Название', 'Категория', 'Фото', 'Ингридиенты', 'Описание')
+what_to_change_en = ('name', 'category', 'photo_id', 'ingridients',
+                     'description')
+english_alias = {x: y for x, y in zip(what_to_change, what_to_change_en)}
 
 inline_kb_category = InlineKeyboardMarkup()
-inline_kb_category.row(hot_dish, backery).row(sauce, salad).row(sol, var)
-
-
-name = InlineKeyboardButton(text='Название', callback_data='name')
-category = InlineKeyboardButton(text='Категория', callback_data='category')
-ingridients = InlineKeyboardButton(text='Ингридиенты',
-                                   callback_data='ingridients')
-description = InlineKeyboardButton(text='Описание',
-                                   callback_data='description')
-photo = InlineKeyboardButton(text='Фото', callback_data='photo_id')
+inline_kb_category.row_width = 3
 
 inline_kb_update = InlineKeyboardMarkup()
-inline_kb_update.row(name, category, photo).row(ingridients, description)
+inline_kb_update.row_width = 3
+
+
+def create_inline_categories():
+    for i in categories:
+        inline_kb_category.insert(
+            InlineKeyboardButton(text=i, callback_data=i)
+        )
+
+
+def create_inline_update():
+    for i in what_to_change:
+        inline_kb_update.insert(
+            InlineKeyboardButton(text=i, callback_data=i)
+        )
+
+
+create_inline_categories()
+create_inline_update()

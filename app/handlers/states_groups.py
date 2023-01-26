@@ -14,7 +14,12 @@ class Update(StatesGroup):
     what_to_change = State()
     change_text = State()
     change_photo = State()
+    change_category = State()
 
 
 class Delete(StatesGroup):
     name = State()
+
+
+class Category(StatesGroup):
+    category = State()

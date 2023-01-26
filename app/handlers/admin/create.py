@@ -38,6 +38,7 @@ async def set_name(message: Message, state: FSMContext):
         await Load.next()
         await message.answer("Укажите категорию",
                              reply_markup=inline_kb_category)
+        await message.answer('Или введите вручную')
         logger.info(f'Пользователь успешно указал название рецепта: '
                     f'{message.text}')
 
@@ -52,6 +53,18 @@ async def choose_category(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer("Введите список ингридиентов",
                                   reply_markup=cancel_keyboard)
     await callback.answer()
+
+
+async def category_choose(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        msg_text = message.text.capitalize()
+        data['category'] = msg_text
+        logger.info(
+            f"Пользователь выбрал категорию '{msg_text}' для рецепта: "
+            f"{data['name']}")
+    await Load.next()
+    await message.answer("Введите список ингридиентов",
+                         reply_markup=cancel_keyboard)
 
 
 async def set_ingridients(message: Message, state: FSMContext):
@@ -91,8 +104,9 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(load_start, text='Загрузить', state=None)
     dp.register_message_handler(set_name, content_types='text',
                                 state=Load.name)
-    dp.register_callback_query_handler(choose_category,
-                                       state=Load.category)
+    dp.register_callback_query_handler(choose_category, state=Load.category)
+    dp.register_message_handler(category_choose, content_types='text',
+                                state=Load.category)
     dp.register_message_handler(set_ingridients, state=Load.ingridients)
     dp.register_message_handler(set_description, state=Load.description)
     dp.register_message_handler(set_photo, content_types='photo',

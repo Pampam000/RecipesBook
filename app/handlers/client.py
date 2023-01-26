@@ -1,8 +1,10 @@
 from aiogram import Dispatcher
 from aiogram.types import Message, CallbackQuery
 
-from app.keyboards.inline_keyboard import inline_kb_category
-from app.keyboards.keyboard import admin_keyboard, client_keyboard
+from app.keyboards.inline_keyboard import inline_kb_category, categories
+from app.keyboards.keyboard import admin_keyboard, client_keyboard, \
+    cancel_keyboard
+from .states_groups import Category
 from ..config import ADMINS_ID
 from ..create_bot import bot
 from ..create_logger import logger
@@ -32,9 +34,11 @@ async def get_all_names(message: Message):
         await message.answer("Список рецептов пуст :(")
 
 
-async def get_recipes_by_category(message: Message):
+async def choose_start(message: Message):
+    await Category.category.set()
     logger.info("Пользователь нажал кнопку 'Рецепты по категориям'")
     await message.answer('Укажите категорию', reply_markup=inline_kb_category)
+    await message.answer('Или введите вручную', reply_markup=cancel_keyboard)
 
 
 async def choose_category(callback: CallbackQuery):
@@ -47,6 +51,23 @@ async def choose_category(callback: CallbackQuery):
         logger.info(msg)
 
     await callback.answer()
+
+
+async def category_choose(message: Message):
+    logger.info(f"Пользователь выбрал категорию '{message.text}'")
+    msg_text = message.text.capitalize()
+    if msg_text in categories:
+
+        if recipes := await crud.get_all_in_category(msg_text):
+            await create_message_with_recipes_list(message, recipes)
+        else:
+            msg = f"Список рецептов в категории '{msg_text}' пуст :("
+            await message.answer(msg)
+            logger.info(msg)
+    else:
+        await message.answer(
+            f"Категории '{message.text}' не сущесвует. "
+            f"Введите название ещё раз")
 
 
 async def get_one_recipe(message: Message):
@@ -64,8 +85,10 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(start, commands=['start'])
     dp.register_message_handler(get_all_names, content_types="text",
                                 text='Список рецептов')
-    dp.register_message_handler(get_recipes_by_category, content_types="text",
+    dp.register_message_handler(choose_start, content_types="text",
                                 text='Рецепты по категориям')
-    dp.register_callback_query_handler(
-        choose_category)
+    dp.register_callback_query_handler(choose_category,
+                                       state=Category.category)
+    dp.register_message_handler(category_choose, state=Category.category,
+                                content_types='text')
     dp.register_message_handler(get_one_recipe, content_types="text")
