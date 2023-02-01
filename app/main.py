@@ -2,8 +2,9 @@ from aiogram.utils import executor
 
 from app.handlers import client, wrong
 from app.handlers.admin import cancel, create, update, delete
-from create_bot import dp
-from create_logger import logger
+from .create_bot import dp
+from .create_logger import logger
+from .db.crud import connect_to_db, disconnect
 
 cancel.register_handlers(dp)
 create.register_handlers(dp)
@@ -15,7 +16,14 @@ wrong.register_handlers(dp)
 
 async def on_startup(_):
     logger.info('Bot started')
+    await connect_to_db()
+
+
+async def on_shutdown(_):
+    logger.info('Bot stopped')
+    await disconnect()
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+    executor.start_polling(dispatcher=dp, skip_updates=True,
+                           on_startup=on_startup, on_shutdown=on_shutdown)
