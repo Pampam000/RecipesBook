@@ -47,9 +47,9 @@ async def get_one_recipe(msg_text: str, chat_id: int, message: Message):
     logger.info(f"Пользователь {chat_id} написал боту '{msg_text}'")
     result = await crud.get_one_recipe(msg_text)
     if result.photo_id:
-        await bot.send_photo(chat_id, result.photo_id, result.message)
+        await bot.send_photo(chat_id, **await result.as_tg_photo())
     else:
-        await message.answer(result.message)
+        await message.answer(**await result.as_tg_answ())
 
 
 @get_chat_id

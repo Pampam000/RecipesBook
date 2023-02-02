@@ -4,7 +4,7 @@ from app.handlers import client, wrong
 from app.handlers.admin import cancel, create, update, delete
 from .create_bot import dp
 from .create_logger import logger
-from .db.crud import connect_to_db, disconnect
+from .db.connect import connect, disconnect
 
 cancel.register_handlers(dp)
 create.register_handlers(dp)
@@ -16,7 +16,7 @@ wrong.register_handlers(dp)
 
 async def on_startup(_):
     logger.info('Bot started')
-    await connect_to_db()
+    await connect()
 
 
 async def on_shutdown(_):

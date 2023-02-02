@@ -19,9 +19,9 @@ async def update_start(chat_id: int, message: Message):
 
     if result.go_next:
         await Update.name.set()
-        await message.answer(**result.as_tg_answer())
+        await message.answer(**await result.as_tg_answer())
     else:
-        await message.reply(**result.as_tg_answer())
+        await message.reply(**await result.as_tg_answer())
 
 
 @get_chat_id
@@ -34,11 +34,11 @@ async def update(msg_text: str, chat_id: int, message: Message,
     if recipe.photo_id:
         async with state.proxy() as data:
             data['name'] = msg_text
-        await bot.send_photo(chat_id, recipe.photo_id, recipe.message)
-        await message.answer(**WHAT_TO_CHANGE.as_tg_answer())
+        await bot.send_photo(chat_id, **await recipe.as_tg_photo())
+        await message.answer(**await WHAT_TO_CHANGE.as_tg_answer())
         await Update.next()
     else:
-        await message.answer(recipe.message)
+        await message.answer(**await recipe.as_tg_answ())
 
 
 async def choose_what_to_change_callback(callback: CallbackQuery,
@@ -54,7 +54,7 @@ async def choose_what_to_change_message(msg_text: str, message: Message,
     await _choose_what_to_change(message, msg_text, state)
 
 
-@capitalize_message
+@capitalize_message()
 async def update_name(msg_text: str, message: Message, state: FSMContext):
     recipe = await crud.get_one_recipe(msg_text)
     if recipe.photo_id:
@@ -67,10 +67,10 @@ async def update_name(msg_text: str, message: Message, state: FSMContext):
             data['value'] = msg_text
             await _set_new_value(message, state, data)
 
-
-async def update_text(message: Message, state: FSMContext):
+@capitalize_message()
+async def update_text(msg_text: str, message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['value'] = message.text.capitalize()
+        data['value'] = msg_text
         await _set_new_value(message, state, data)
 
 
@@ -101,7 +101,8 @@ async def _choose_what_to_change(chat_id: int, message: Message, msg: str,
     async with state.proxy() as data:
         data['what_to_change'] = RECIPE_PARAMS[msg]
     recipe = CASES[msg]
-    await message.answer(**recipe.as_tg_answer())
+
+    await message.answer(**await recipe.as_tg_answer())
     await recipe.new_state.set()
 
 

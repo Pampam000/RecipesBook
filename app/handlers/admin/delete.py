@@ -14,7 +14,7 @@ async def delete_start(chat_id: int, message: Message):
     if result.go_next:
 
         await Delete.name.set()
-        await message.answer(**result.as_tg_answer())
+        await message.answer(**await result.as_tg_answer())
     else:
         await message.reply(result.text)
 
@@ -27,12 +27,12 @@ async def delete(msg_text: str, chat_id: int, message: Message,
     result = await crud.delete_recipe_if_exists(msg_text)
 
     if result.go_next:
-        await message.answer(**result.as_tg_answer())
+        await message.answer(**await result.as_tg_answer())
         logger.info(f"Конечный автомат {await state.get_state()} закончен")
         await state.finish()
 
     else:
-        await message.answer(**result.as_tg_answer())
+        await message.answer(**await result.as_tg_answer())
 
 
 def register_handlers(dp: Dispatcher):

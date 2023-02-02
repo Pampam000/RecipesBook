@@ -15,7 +15,7 @@ async def load_start(chat_id: int, message: Message):
 
     if result.go_next:
         await Load.name.set()
-        await message.answer(**result.as_tg_answer())
+        await message.answer(**await result.as_tg_answer())
     else:
         await message.reply(result.text)
 
@@ -26,14 +26,14 @@ async def set_name(msg_text: str, chat_id: int, message: Message,
                    state: FSMContext):
     logger.info(f'Пользователь {chat_id} хочет создать рецепт: {msg_text}')
     result = await crud.check_recipe_name_in_db(msg_text)
-    await message.answer(**result.as_tg_answer())
+    await message.answer(**await result.as_tg_answer())
     if result.go_next:
         async with state.proxy() as data:
             data['name'] = msg_text
         await Load.next()
         await message.answer("Или введите вручную")
         logger.info(f'Пользователь успешно указал название рецепта: '
-                    f'{message.text}')
+                    f'{msg_text}')
 
 
 async def choose_category_callback(callback: CallbackQuery, state: FSMContext):
