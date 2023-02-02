@@ -2,69 +2,50 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from app.config import ADMINS_ID
 from app.create_logger import logger
 from app.db import crud
-from app.keyboards.inline_keyboard import inline_kb_category
 from app.keyboards.keyboard import cancel_keyboard, admin_keyboard
+from ..decorators import get_chat_id, capitalize_message
 from ..states_groups import Load
 
 
-async def load_start(message: Message):
-    user_id = message.from_user.id
-    if str(user_id) in ADMINS_ID:
+@get_chat_id
+async def load_start(chat_id: int, message: Message):
+    result = await crud.load_start(chat_id)
 
+    if result.go_next:
         await Load.name.set()
-
-        await message.answer("Введите название", reply_markup=cancel_keyboard)
-        logger.info(f'Пользователь с id {user_id} является админом и начал '
-                    'загрузку рецепта')
+        await message.answer(**result.as_tg_answer())
     else:
-        await message.reply("Вы не можете загружать рецепты")
-        logger.info(f'Пользователь с id {user_id} НЕ является админом и хотел '
-                    'начать загрузку рецепта')
+        await message.reply(result.text)
 
 
-async def set_name(message: Message, state: FSMContext):
-    logger.info(f'Пользователь хочет создать рецепт: {message.text}')
-    if await crud.get_one_recipe(message.text):
-        await message.answer(f"Рецепт c названием: '{message.text}' уже "
-                             f"существует, введите другое название",
-                             reply_markup=cancel_keyboard)
-        logger.info('Такой рецепт уже существует')
-    else:
+@get_chat_id
+@capitalize_message(1)
+async def set_name(msg_text: str, chat_id: int, message: Message,
+                   state: FSMContext):
+    logger.info(f'Пользователь {chat_id} хочет создать рецепт: {msg_text}')
+    result = await crud.check_recipe_name_in_db(msg_text)
+    await message.answer(**result.as_tg_answer())
+    if result.go_next:
         async with state.proxy() as data:
-            data['name'] = message.text.capitalize()
+            data['name'] = msg_text
         await Load.next()
-        await message.answer("Укажите категорию",
-                             reply_markup=inline_kb_category)
-        await message.answer('Или введите вручную')
+        await message.answer("Или введите вручную")
         logger.info(f'Пользователь успешно указал название рецепта: '
                     f'{message.text}')
 
 
-async def choose_category(callback: CallbackQuery, state: FSMContext):
-    async with state.proxy() as data:
-        data['category'] = callback.data
-        logger.info(
-            f"Пользователь выбрал категорию '{callback.data}' для рецепта: "
-            f" {data['name']}")
-    await Load.next()
-    await callback.message.answer("Введите список ингридиентов",
-                                  reply_markup=cancel_keyboard)
+async def choose_category_callback(callback: CallbackQuery, state: FSMContext):
+    await _choose_category(callback.message, callback.data, state)
     await callback.answer()
 
 
-async def category_choose(message: Message, state: FSMContext):
-    async with state.proxy() as data:
-        msg_text = message.text.capitalize()
-        data['category'] = msg_text
-        logger.info(
-            f"Пользователь выбрал категорию '{msg_text}' для рецепта: "
-            f"{data['name']}")
-    await Load.next()
-    await message.answer("Введите список ингридиентов",
-                         reply_markup=cancel_keyboard)
+@capitalize_message()
+async def choose_category_message(msg_text: str, message: Message,
+                                  state: FSMContext):
+    await crud.add_new_category_if_not_exists(msg_text)
+    await _choose_category(message, msg_text, state)
 
 
 async def set_ingridients(message: Message, state: FSMContext):
@@ -94,18 +75,31 @@ async def set_photo(message: Message, state: FSMContext):
         logger.info(
             f"Пользователь установил фото '{photo_id}' для рецепта: "
             f" {data['name']}")
-        msg = await crud.add_to_db(data)
+        msg = await crud.add_recipe(data)
         await message.answer(msg, reply_markup=admin_keyboard)
     logger.info(f"Конечный автомат {await state.get_state()} закончен")
     await state.finish()
+
+
+@get_chat_id
+async def _choose_category(chat_id: int, message: Message, msg_text: str,
+                           state: FSMContext):
+    async with state.proxy() as data:
+        data['category'] = msg_text
+        logger.info(f"Пользователь {chat_id} выбрал категорию '{msg_text}' "
+                    f"для рецепта \'{data['name']}\'")
+    await Load.next()
+    await message.answer("Введите список ингридиентов",
+                         reply_markup=cancel_keyboard)
 
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(load_start, text='Загрузить', state=None)
     dp.register_message_handler(set_name, content_types='text',
                                 state=Load.name)
-    dp.register_callback_query_handler(choose_category, state=Load.category)
-    dp.register_message_handler(category_choose, content_types='text',
+    dp.register_callback_query_handler(choose_category_callback,
+                                       state=Load.category)
+    dp.register_message_handler(choose_category_message, content_types='text',
                                 state=Load.category)
     dp.register_message_handler(set_ingridients, state=Load.ingridients)
     dp.register_message_handler(set_description, state=Load.description)

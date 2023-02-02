@@ -12,6 +12,7 @@ class Load(StatesGroup):
 class Update(StatesGroup):
     name = State()
     what_to_change = State()
+    change_name = State()
     change_text = State()
     change_photo = State()
     change_category = State()
@@ -22,4 +23,4 @@ class Delete(StatesGroup):
 
 
 class Category(StatesGroup):
-    category = State()
+    name = State()

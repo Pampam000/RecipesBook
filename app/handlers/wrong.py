@@ -48,7 +48,7 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(other_photo, content_types='any',
                                 state=[Load.photo, Update.change_photo])
     dp.register_message_handler(other_callback, content_types='any',
-                                state=[Category.category,
+                                state=[Category.name,
                                        Update.what_to_change,
                                        Update.change_category])
     dp.register_message_handler(other_text, content_types='any',
