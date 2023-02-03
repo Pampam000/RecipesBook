@@ -6,11 +6,14 @@ from .create_bot import dp
 from .create_logger import logger
 from .db.connect import connect, disconnect
 
+client.register_start_handlers(dp)
 cancel.register_handlers(dp)
+
 create.register_handlers(dp)
 update.register_handlers(dp)
 delete.register_handlers(dp)
 client.register_handlers(dp)
+
 wrong.register_handlers(dp)
 
 

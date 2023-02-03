@@ -52,14 +52,24 @@ async def get_one_recipe(msg_text: str, chat_id: int, message: Message):
         await message.answer(**await result.as_tg_answ())
 
 
+async def other_command(message: Message):
+    logger.info('Пользователь нажал кнопку "Старт" находясь не на главной')
+    await message.reply(
+        "Нельзя запустить бота во время выполнения этого действия")
+
+
 @get_chat_id
 async def _choose_category(chat_id: int, message: Message, msg_text: str):
     logger.info(f"Пользователь {chat_id} выбрал категорию '{msg_text}'")
     await message.answer(await crud.get_all_recipes_in_category(msg_text))
 
 
-def register_handlers(dp: Dispatcher):
+def register_start_handlers(dp: Dispatcher):
     dp.register_message_handler(start, commands=['start'], state=None)
+    dp.register_message_handler(other_command, commands=['start'], state='*')
+
+
+def register_handlers(dp: Dispatcher):
     dp.register_message_handler(get_all_recipes, content_types="text",
                                 text='Список рецептов')
     dp.register_message_handler(choose_start, content_types="text",
