@@ -7,8 +7,6 @@ async def connect():
     global connection
     connection = await sq.connect('recipes_book.db')
     logger.info("Connected to db")
-    logger.info(connection)
-    logger.info(id(connection))
 
 
 async def disconnect():

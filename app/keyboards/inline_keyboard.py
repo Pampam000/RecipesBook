@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from ..config import RECIPE_PARAMS_RU, BASE_CATEGORIES
 
 
-def create_inline_keyboard(button_names: tuple, row_width: int = 3):
+def create_inline_keyboard(button_names: list, row_width: int = 3):
     keyboard = InlineKeyboardMarkup()
     keyboard.row_width = row_width
     for i in button_names:

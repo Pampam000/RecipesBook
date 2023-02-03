@@ -7,7 +7,8 @@ from ..connect import commit
 from ..decorators import with_cursor
 from ..schemas import DBRecipe, Answer
 from .read import get_one_recipe
-from .services import check_category_in_db, fsm_start
+from .services import check_category_in_db, fsm_start, \
+    create_inline_kb_categories
 
 recipes = 'recipes'
 categories = 'categories'
@@ -21,21 +22,13 @@ async def check_recipe_name_in_db(name: str) -> Answer:
     db_result = await get_one_recipe(name)
     if not db_result.photo_id:
         return Answer(text="Укажите категорию",
-                      reply_markup=inline_kb_category,
+                      reply_markup=await create_inline_kb_categories(),
                       go_next=True)
     else:
         return Answer(
             text=f"Рецепт c названием: '{name}' уже существует. Введите "
                  "другое название",
             reply_markup=cancel_keyboard)
-
-
-@with_cursor
-async def add_new_category_if_not_exists(cursor: Cursor, name: str):
-    if not await check_category_in_db(name):
-        await cursor.execute(f"INSERT INTO {categories} VALUES(?)", (name,))
-        await commit()
-        logger.info(f"Категория {name} добавлена в БД")
 
 
 @with_cursor

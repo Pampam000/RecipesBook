@@ -1,7 +1,6 @@
 from aiogram import Dispatcher
 from aiogram.types import Message, CallbackQuery
 
-from app.keyboards.inline_keyboard import inline_kb_category
 from app.keyboards.keyboard import cancel_keyboard
 from .decorators import get_chat_id, capitalize_message
 from .states_groups import Category
@@ -27,7 +26,8 @@ async def get_all_recipes(chat_id: int, message: Message):
 async def choose_start(chat_id: int, message: Message):
     await Category.name.set()
     logger.info(f"Пользователь {chat_id} нажал кнопку 'Рецепты по категориям'")
-    await message.answer('Укажите категорию', reply_markup=inline_kb_category)
+    await message.answer('Укажите категорию',
+                         reply_markup=await crud.create_inline_kb_categories())
     await message.answer('Или введите вручную', reply_markup=cancel_keyboard)
 
 

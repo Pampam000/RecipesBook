@@ -44,7 +44,6 @@ async def choose_category_callback(callback: CallbackQuery, state: FSMContext):
 @capitalize_message()
 async def choose_category_message(msg_text: str, message: Message,
                                   state: FSMContext):
-    await crud.add_new_category_if_not_exists(msg_text)
     await _choose_category(message, msg_text, state)
 
 

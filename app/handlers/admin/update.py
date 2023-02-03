@@ -8,7 +8,7 @@ from app.create_bot import bot
 from app.create_logger import logger
 from app.db import crud
 from app.keyboards.keyboard import admin_keyboard
-from ..config import CASES, WHAT_TO_CHANGE
+from ..config import WHAT_TO_CHANGE, create_cases
 from ..decorators import get_chat_id, capitalize_message, check_what_to_change
 from ..states_groups import Update
 
@@ -67,6 +67,7 @@ async def update_name(msg_text: str, message: Message, state: FSMContext):
             data['value'] = msg_text
             await _set_new_value(message, state, data)
 
+
 @capitalize_message()
 async def update_text(msg_text: str, message: Message, state: FSMContext):
     async with state.proxy() as data:
@@ -100,8 +101,10 @@ async def _choose_what_to_change(chat_id: int, message: Message, msg: str,
 
     async with state.proxy() as data:
         data['what_to_change'] = RECIPE_PARAMS[msg]
-    recipe = CASES[msg]
-
+    recipe = await create_cases()
+    logger.info(recipe)
+    recipe = recipe[msg]
+    logger.info(recipe)
     await message.answer(**await recipe.as_tg_answer())
     await recipe.new_state.set()
 
