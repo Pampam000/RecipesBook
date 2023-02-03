@@ -1,20 +1,16 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from ..config import ADMIN_BUTTONS, USER_BUTTONS, CANCEL_BUTTONS
 
 
-load = KeyboardButton('Загрузить')
-get_all = KeyboardButton('Список рецептов')
-category = KeyboardButton('Рецепты по категориям')
+def create_keyboard(buttons_rows: list[list]) -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    for row in buttons_rows:
+        keyboard.row(*[KeyboardButton(text=x) for x in row])
+    return keyboard
 
-update = KeyboardButton('Обновить рецепт')
-delete = KeyboardButton('Удалить рецепт')
-cancel = KeyboardButton('Отмена')
 
-admin_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-admin_keyboard.row(get_all, category).row(load, update, delete)
+admin_keyboard = create_keyboard(ADMIN_BUTTONS)
 
-client_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-client_keyboard.add(get_all, category)
+client_keyboard = create_keyboard(USER_BUTTONS)
 
-cancel_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-cancel_keyboard.add(cancel)
-
+cancel_keyboard = create_keyboard(CANCEL_BUTTONS)

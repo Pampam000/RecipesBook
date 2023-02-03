@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from ..config import RECIPE_PARAMS_RU, BASE_CATEGORIES
+from ..config import RECIPE_PARAMS_RU
 
 
 def create_inline_keyboard(button_names: list, row_width: int = 3):
@@ -11,5 +11,4 @@ def create_inline_keyboard(button_names: list, row_width: int = 3):
     return keyboard
 
 
-inline_kb_category = create_inline_keyboard(BASE_CATEGORIES)
 inline_kb_update = create_inline_keyboard(RECIPE_PARAMS_RU)

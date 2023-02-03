@@ -1,14 +1,13 @@
 from aiosqlite import Cursor
 
 from app.create_logger import logger
-from app.keyboards.inline_keyboard import inline_kb_category
 from app.keyboards.keyboard import cancel_keyboard
+from .read import get_one_recipe
+from .services import fsm_start, \
+    create_inline_kb_categories
 from ..connect import commit
 from ..decorators import with_cursor
 from ..schemas import DBRecipe, Answer
-from .read import get_one_recipe
-from .services import check_category_in_db, fsm_start, \
-    create_inline_kb_categories
 
 recipes = 'recipes'
 categories = 'categories'

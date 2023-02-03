@@ -3,9 +3,10 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from app.create_logger import logger
-from app.keyboards.inline_keyboard import inline_kb_category, inline_kb_update
+from app.keyboards.inline_keyboard import inline_kb_update
 from app.keyboards.keyboard import cancel_keyboard, admin_keyboard
 from .states_groups import Load, Update, Delete, Category
+from ..db import crud
 
 
 async def other_text(message: Message, state: FSMContext):
@@ -34,7 +35,7 @@ async def other_callback(message: Message, state: FSMContext):
     else:  # elif state_str in ('Category:category', 'Update:change_category')
         await message.reply(
             'Пожалуйста, введите текстовое сообщение или нажмите кнопку',
-            reply_markup=inline_kb_category)
+            reply_markup=await crud.create_inline_kb_categories)
 
 
 async def other_photo(message: Message, state: FSMContext):
